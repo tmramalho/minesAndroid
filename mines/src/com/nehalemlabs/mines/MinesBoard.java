@@ -12,7 +12,9 @@ public class MinesBoard {
 	private int width;
 	private int height;
 	private int nb;
+	private int remaining;
 	private boolean boom = false;
+	private boolean clean = false;
 	private boolean ready = false;
 	
 	public MinesBoard(int w, int h, int nBombs) {
@@ -72,6 +74,7 @@ public class MinesBoard {
 			}
 		}
 		
+		remaining = width*height - nb;
 		ready = true;
 	}
 	
@@ -84,9 +87,11 @@ public class MinesBoard {
 	
 	public void tileOpened(int i, int j) {
 		if(!ready) putBombs(i, j);
+		if(boom || clean) return;
 		if(state[i][j] > 0) return;
 		if(bombs[i][j] == 1) {
 			this.boom = true;
+			Gdx.app.log("Board", "DEFEAT");
 			return;
 		}
 		
@@ -115,10 +120,16 @@ public class MinesBoard {
 			if(p.i != 0 && p.j != 0                  && state[p.i-1][p.j-1] == 0) 
 				openSingleTile(p.i-1, p.j-1, q);
 		}
+		
+		if(remaining == 0) {
+			clean = true;
+			Gdx.app.log("Board", "VICTORY");
+		}
 	}
 	
 	private void openSingleTile(int i, int j, Queue<Pair<Integer,Integer>> q) {
 		state[i][j] = 2;
+		remaining -= 1;
 		if(counter[i][j] == 0) {
 			q.add(new Pair<Integer, Integer>(i, j));
 		}

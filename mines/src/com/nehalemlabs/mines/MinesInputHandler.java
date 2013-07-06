@@ -1,6 +1,7 @@
 package com.nehalemlabs.mines;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputProcessor;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.math.Vector3;
@@ -23,6 +24,20 @@ public class MinesInputHandler implements InputProcessor {
 
 	@Override
 	public boolean keyUp (int keycode) {
+		switch(keycode){
+		case Input.Keys.LEFT:
+			boss.moveCam(-0.5f, 0);
+			break;
+		case Input.Keys.RIGHT:
+			boss.moveCam(0.5f, 0);
+			break;
+		case Input.Keys.UP:
+			boss.moveCam(0, 0.5f);
+			break;
+		case Input.Keys.DOWN:
+			boss.moveCam(0, -0.5f);
+			break;
+		}
 		return false;
 	}
 
