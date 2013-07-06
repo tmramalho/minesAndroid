@@ -85,6 +85,11 @@ public class MinesBoard {
 		return counter[i][j]; //open
 	}
 	
+	public void tileFlagged(int i, int j) {
+		if(state[i][j] == 0) state[i][j] = 1;
+		if(state[i][j] == 1) state[i][j] = 0;
+	}
+	
 	public void tileOpened(int i, int j) {
 		if(!ready) putBombs(i, j);
 		if(boom || clean) return;

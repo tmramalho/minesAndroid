@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Slider;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -35,21 +36,37 @@ public class MainMenu implements Screen {
 		Table table = new Table();
 		table.setFillParent(true);
 		stage.addActor(table);
+		final Label title = new Label("Welcome to mines!", skin);
+		table.add(title);
+		table.row();
+		final Label wLabel = new Label("Width", skin);
+		table.add(wLabel);
+		final Slider wslider = new Slider(10, 100, 1, false, skin);
+		wslider.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				//
+			}
+		});
+		table.add(wslider);
+		table.row();
+		final Label hLabel = new Label("Height", skin);
+		table.add(hLabel);
+		final Slider hslider = new Slider(10, 100, 1, false, skin);
+		table.add(hslider);
+		table.row();
+		final Label nbLabel = new Label("Bombs", skin);
+		table.add(nbLabel);
+		final Slider nbslider = new Slider(10, 100, 1, false, skin);
+		table.add(nbslider);
+		table.row();
 		final TextButton button = new TextButton("Click me!", skin);
 		table.add(button);
-		final TextButton obutton = new TextButton("Click me!", skin);
-		table.add(obutton);
 		button.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());
 				parent.playGame(20, 20, 20);
 			}
 		});
-		table.row();
-		table.add(new Image(skin.newDrawable("white", Color.RED))).size(64);
-		table.row();
-		final Slider slider = new Slider(0, 10, 1, false, skin);
-		table.add(slider);
 		Gdx.app.log("MainMenu", "I am alive");
 	}
 
