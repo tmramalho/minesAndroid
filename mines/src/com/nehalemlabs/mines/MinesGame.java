@@ -132,6 +132,7 @@ public class MinesGame implements Screen {
 			return; //too much zoom in;
 		camera.zoom -= f;
 		camera.update();
+		lockCam();
 	}
 
 	public void zoomout(float f) {
@@ -141,19 +142,40 @@ public class MinesGame implements Screen {
 			return; //too much zoom out;
 		camera.zoom += f;
 		camera.update();
+		moveCam(0,0);
+		lockCam();
+	}
+	
+	private void lockCam() {
+		//make sure the camera stays inside the board when zooming
+		float dx = 0;
+		float dy = 0;
+		float vw = camera.viewportWidth*camera.zoom;
+		float vh = camera.viewportHeight*camera.zoom;
+		Vector3 p = camera.position;
+		if(p.x+vw/2 > width/2)   dx = width/2 - vw/2 - p.x;
+		else if(p.x-vw/2 < -width/2)  dx = vw/2 - width/2 - p.x;
+		if(p.y+vh/2 > height/2)  dy = height/2 - vh/2 - p.y;
+		else if(p.y-vh/2 < -height/2) dy = vh/2 - height/2 - p.y;
+		if (vw >=  width) dx = 0 - p.x;
+		if (vh >= height) dy = 0 - p.y;
+		camera.translate(dx, dy, 0);
+		camera.update();
 	}
 
 	public void moveCam(float f, float g) {
 		float dx = 0;
 		float dy = 0;
-		float vw = camera.viewportWidth;
-		float vh = camera.viewportHeight;
+		float vw = camera.viewportWidth*camera.zoom;
+		float vh = camera.viewportHeight*camera.zoom;
 		Vector3 p = camera.position;
 		//lock at bounds
 		if(f > 0) { if(p.x+f+vw/2 > width/2)   dx = width/2 - vw/2 - p.x;  else dx = f; }
 		if(f < 0) { if(p.x+f-vw/2 < -width/2)  dx = vw/2 - width/2 - p.x;  else dx = f; }
 		if(g > 0) { if(p.y+g+vh/2 > height/2)  dy = height/2 - vh/2 - p.y; else dy = g; }
 		if(g < 0) { if(p.y+g-vh/2 < -height/2) dy = vh/2 - height/2 - p.y; else dy = g; }
+		if (vw >=  width) dx = 0 - p.x;
+		if (vh >= height) dy = 0 - p.y;
 		camera.translate(dx, dy, 0);
 		camera.update();
 	}
