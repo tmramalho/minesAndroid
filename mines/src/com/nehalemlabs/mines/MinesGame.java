@@ -51,7 +51,7 @@ public class MinesGame implements Screen {
 		
 		atlas = new TextureAtlas(Gdx.files.internal("tiles.atlas"));
 
-		tileSprites = new Sprite[10];
+		tileSprites = new Sprite[11];
 		tileSprites[9] = atlas.createSprite("closed");
 		tileSprites[0] = atlas.createSprite("empty");
 		tileSprites[1] = atlas.createSprite("open1");
@@ -62,6 +62,7 @@ public class MinesGame implements Screen {
 		tileSprites[6] = atlas.createSprite("open6");
 		tileSprites[7] = atlas.createSprite("open7");
 		tileSprites[8] = atlas.createSprite("open8");
+		tileSprites[10] = atlas.createSprite("flag");
 		Gdx.app.log("MainGame", "I am alive");
 	}
 	

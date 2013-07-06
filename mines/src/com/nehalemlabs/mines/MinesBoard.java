@@ -86,14 +86,16 @@ public class MinesBoard {
 	}
 	
 	public void tileFlagged(int i, int j) {
+		Gdx.app.log("Board", "Flagged" + i + ","+j);
 		if(state[i][j] == 0) state[i][j] = 1;
-		if(state[i][j] == 1) state[i][j] = 0;
+		else if(state[i][j] == 1) state[i][j] = 0;
 	}
 	
 	public void tileOpened(int i, int j) {
 		if(!ready) putBombs(i, j);
 		if(boom || clean) return;
 		if(state[i][j] > 0) return;
+		Gdx.app.log("Board", "Opened" + i + ","+j);
 		if(bombs[i][j] == 1) {
 			this.boom = true;
 			Gdx.app.log("Board", "DEFEAT");

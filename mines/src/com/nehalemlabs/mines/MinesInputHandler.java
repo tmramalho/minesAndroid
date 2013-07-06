@@ -69,8 +69,10 @@ public class MinesInputHandler implements InputProcessor {
 		int h = board.getHeight();
 		int i = (int) ((touchPos.x + w/2));
 		int j = (int) ((touchPos.y + h/2));
-		if(i >= 0 && i < w && j >=0 && j < h)
-			board.tileOpened(i, j);
+		if(i >= 0 && i < w && j >=0 && j < h) {
+			if (button == 0) board.tileOpened(i, j);
+			else if(button == 1) board.tileFlagged(i, j);
+		}
 		//boss.recenterCamera(touchPos.x, touchPos.y);
 		return false;
 	}
