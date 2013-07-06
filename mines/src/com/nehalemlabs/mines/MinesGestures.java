@@ -1,5 +1,9 @@
 package com.nehalemlabs.mines;
 
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
@@ -9,6 +13,28 @@ public class MinesGestures implements GestureListener {
 	private MinesBoard board;
 	private MinesGame boss;
 	private OrthographicCamera camera;
+	
+	private final ScheduledExecutorService seService = Executors.newScheduledThreadPool(1);
+	private int lTap = 0;
+	
+	private Runnable tapper(int current) {
+		return new Runnable() {
+			int current = 0;
+			Runnable setCurrent(int _current) {
+				current = _current;
+				return this;
+			}
+			@Override
+			public void run() {
+				if(current == lTap) {
+					Gdx.app.log("GestureDetectorTest", "tap " + current + " activated");
+				}
+				else {
+					
+				}
+			}
+		}.setCurrent(current);
+	}
 	
 	public MinesGestures(MinesGame g, OrthographicCamera c, MinesBoard b) {
 		boss = g;
@@ -24,7 +50,11 @@ public class MinesGestures implements GestureListener {
 
 	@Override
 	public boolean tap(float x, float y, int count, int button) {
-		Gdx.app.log("GestureDetectorTest", "tap at " + x + ", " + y + ", count: " + count + ", btn:" + button);
+		//Gdx.app.log("GestureDetectorTest", "tap at " + x + ", " + y + ", count: " + count + ", btn:" + button);
+		
+		lTap = count;
+		seService.schedule(tapper(count), 300, TimeUnit.MILLISECONDS);
+		
 		return false;
 	}
 
