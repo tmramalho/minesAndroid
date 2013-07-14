@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL10;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
@@ -25,9 +26,14 @@ public class MainMenu implements Screen {
 	MinesMain parent;
 	private Stage stage;
 	private Skin skin;
+	private OrthographicCamera camera;
 
 	// constructor to keep a reference to the main Game class
 	public MainMenu(MinesMain g){
+		float w = Gdx.graphics.getWidth();
+		float h = Gdx.graphics.getHeight();
+		this.camera = new OrthographicCamera(w, h);
+		this.camera.position.set(w/2, h/2, 0f);
 		this.parent = g;
 		stage = new Stage();
 		Gdx.input.setInputProcessor(stage);
@@ -39,32 +45,48 @@ public class MainMenu implements Screen {
 		final Label title = new Label("Welcome to mines!", skin);
 		table.add(title);
 		table.row();
-		final Label wLabel = new Label("Width", skin);
-		table.add(wLabel);
-		final Slider wslider = new Slider(10, 100, 1, false, skin);
-		wslider.addListener(new ChangeListener() {
-			public void changed (ChangeEvent event, Actor actor) {
-				//
-			}
-		});
-		table.add(wslider);
-		table.row();
-		final Label hLabel = new Label("Height", skin);
-		table.add(hLabel);
-		final Slider hslider = new Slider(10, 100, 1, false, skin);
-		table.add(hslider);
-		table.row();
-		final Label nbLabel = new Label("Bombs", skin);
-		table.add(nbLabel);
-		final Slider nbslider = new Slider(10, 100, 1, false, skin);
-		table.add(nbslider);
-		table.row();
-		final TextButton button = new TextButton("Click me!", skin);
+		final TextButton button = new TextButton("Easy", skin);
 		table.add(button);
 		button.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());
-				parent.playGame(20, 20, 20);
+				parent.playGame(9, 9, 10);
+			}
+		});
+		table.row();
+		final TextButton button1 = new TextButton("Medium", skin);
+		table.add(button1);
+		button1.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Clicked! Is checked: " + button.isChecked());
+				parent.playGame(16, 16, 40);
+			}
+		});
+		table.row();
+		final TextButton button2 = new TextButton("Hard", skin);
+		table.add(button2);
+		button2.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Clicked! Is checked: " + button.isChecked());
+				parent.playGame(30, 16, 99);
+			}
+		});
+		table.row();
+		final TextButton button3 = new TextButton("Professional", skin);
+		table.add(button3);
+		button3.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Clicked! Is checked: " + button.isChecked());
+				parent.playGame(30, 24, 180);
+			}
+		});
+		table.row();
+		final TextButton button4 = new TextButton("Custom", skin);
+		table.add(button4);
+		button4.addListener(new ChangeListener() {
+			public void changed (ChangeEvent event, Actor actor) {
+				System.out.println("Clicked! Is checked: " + button.isChecked());
+				parent.showCustom();
 			}
 		});
 		Gdx.app.log("MainMenu", "I am alive");

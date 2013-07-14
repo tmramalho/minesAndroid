@@ -8,6 +8,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 
 public class MinesGestures implements GestureListener {
 	private MinesBoard board;
@@ -17,10 +18,14 @@ public class MinesGestures implements GestureListener {
 	private final ScheduledExecutorService seService = Executors.newScheduledThreadPool(1);
 	private int lTap = 0;
 	
-	private Runnable tapper(int current) {
+	private Runnable tapper(float x, float y, int current) {
 		return new Runnable() {
 			int current = 0;
-			Runnable setCurrent(int _current) {
+			float x;
+			float y;
+			Runnable setCurrent(float _x, float _y, int _current) {
+				x = _x;
+				y = _y;
 				current = _current;
 				return this;
 			}
@@ -28,12 +33,16 @@ public class MinesGestures implements GestureListener {
 			public void run() {
 				if(current == lTap) {
 					Gdx.app.log("GestureDetectorTest", "tap " + current + " activated");
+					Vector3 touchPos = new Vector3();
+					touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+					camera.unproject(touchPos);
+					boss.processTouch(touchPos.x, touchPos.y, current-1);
 				}
 				else {
 					
 				}
 			}
-		}.setCurrent(current);
+		}.setCurrent(x, y, current);
 	}
 	
 	public MinesGestures(MinesGame g, OrthographicCamera c, MinesBoard b) {
@@ -53,7 +62,7 @@ public class MinesGestures implements GestureListener {
 		//Gdx.app.log("GestureDetectorTest", "tap at " + x + ", " + y + ", count: " + count + ", btn:" + button);
 		
 		lTap = count;
-		seService.schedule(tapper(count), 300, TimeUnit.MILLISECONDS);
+		seService.schedule(tapper(x, y, count), 300, TimeUnit.MILLISECONDS);
 		
 		return false;
 	}
@@ -72,20 +81,28 @@ public class MinesGestures implements GestureListener {
 
 	@Override
 	public boolean pan(float x, float y, float deltaX, float deltaY) {
-		// TODO Auto-generated method stub
+		Gdx.app.log("PAN", x + ":" + y + ":" + deltaX + ":" + deltaY);
+		boss.moveCam(-deltaX/100, deltaY/100);
 		return false;
 	}
 
 	@Override
 	public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2,
 			Vector2 pointer1, Vector2 pointer2) {
-		// TODO Auto-generated method stub
+		Gdx.app.log("Pinch", initialPointer1.x + ":" + initialPointer2.x + ":" + pointer1.x + ":" + pointer2.x);
 		return false;
 	}
 
 	@Override
 	public boolean zoom(float initialDistance, float distance) {
-		// TODO Auto-generated method stub
+		Gdx.app.log("Zoom", initialDistance + ":" + distance);
+		if(initialDistance < distance) {
+			float ratio = distance/initialDistance;
+			boss.zoomin(ratio);
+		} else {
+			float ratio = initialDistance/distance;
+			boss.zoomout(ratio);
+		}
 		return false;
 	}
 	}

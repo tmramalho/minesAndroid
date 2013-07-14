@@ -8,6 +8,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -27,16 +28,23 @@ public class MinesGame implements Screen {
 	private MainMenu mainMenu;
 	private MinesMain parent;
 	private InputMultiplexer im;
+	private BitmapFont font;
+	private OrthographicCamera cameraMiniMap;
+	private SpriteBatch batchMiniMap;
 	
 	public MinesGame(MinesMain g) {
 		this.parent = g;
 		float w = Gdx.graphics.getWidth();
 		float h = Gdx.graphics.getHeight();
 		
-		camera = new OrthographicCamera(10, 10*h/w);
+		camera = new OrthographicCamera(1, h/w);
 		batch = new SpriteBatch();
+		font = new BitmapFont(Gdx.files.internal("data/default.fnt"), Gdx.files.internal("data/default.png"), false);
 		im = new InputMultiplexer();
 		board = new MinesBoard(10, 10, 10);
+		
+		cameraMiniMap = new OrthographicCamera(w, h);
+		batchMiniMap = new SpriteBatch();
 
 		if(Gdx.app.getType() == ApplicationType.Desktop) {
 			MinesInputHandler ih = new MinesInputHandler(this, camera, board);
@@ -51,7 +59,7 @@ public class MinesGame implements Screen {
 		
 		atlas = new TextureAtlas(Gdx.files.internal("tiles.atlas"));
 
-		tileSprites = new Sprite[11];
+		tileSprites = new Sprite[12];
 		tileSprites[9] = atlas.createSprite("closed");
 		tileSprites[0] = atlas.createSprite("empty");
 		tileSprites[1] = atlas.createSprite("open1");
@@ -63,6 +71,7 @@ public class MinesGame implements Screen {
 		tileSprites[7] = atlas.createSprite("open7");
 		tileSprites[8] = atlas.createSprite("open8");
 		tileSprites[10] = atlas.createSprite("flag");
+		tileSprites[11] = atlas.createSprite("bomb");
 		Gdx.app.log("MainGame", "I am alive");
 	}
 	
@@ -70,6 +79,17 @@ public class MinesGame implements Screen {
 		width = w;
 		height = h;
 		board.createMineField(width, height, nb);
+		float nextZoom;
+		if((float) width/(float)height > camera.viewportWidth/camera.viewportHeight) {
+			nextZoom = width / camera.viewportWidth;
+		} else {
+			nextZoom = height / camera.viewportHeight;
+		}
+		camera.zoom = nextZoom;
+		camera.update();
+		moveCam(0,0);
+		lockCam();
+		
 	}
 
 	@Override
@@ -82,8 +102,8 @@ public class MinesGame implements Screen {
 		Gdx.gl.glClearColor(0.9f, 0.9f, 0.9f, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
 		
-		float wStart = -1 * width/2;
-		float hStart = -1 * height/2;
+		float wStart = -1 * width/2.0f;
+		float hStart = -1 * height/2.0f;
 		
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
@@ -94,7 +114,17 @@ public class MinesGame implements Screen {
 			}
 		}
 		batch.end();
-		//Gdx.app.log("MainGame", "I am active");
+		
+		float w = Gdx.graphics.getWidth();
+		float h = Gdx.graphics.getHeight();
+		int nf = board.getNumberHiddenBombs();
+		Pair<Integer, Integer> elapsed = board.getElapsedTime();
+		batchMiniMap.setProjectionMatrix(cameraMiniMap.combined);
+		batchMiniMap.begin();
+		font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		font.draw(batchMiniMap, Integer.toString(elapsed.i) + ":" + Integer.toString(elapsed.j), -40, h/2);
+		font.draw(batchMiniMap, Integer.toString(nf), 0, h/2);
+		batchMiniMap.end();
 	}
 
 	@Override
@@ -127,8 +157,11 @@ public class MinesGame implements Screen {
 	}
 
 	public void zoomin(float f) {
-		Gdx.app.log("CameraIn", Float.toString(camera.viewportWidth*camera.zoom) + ":" + Float.toString(camera.viewportHeight*camera.zoom));
 		float nextZoom = camera.zoom - f;
+		Gdx.app.log("ZoomIn", camera.viewportWidth*camera.zoom + " : " +
+				camera.viewportWidth*nextZoom + " , " +
+				camera.viewportHeight*camera.zoom + " : " +
+				camera.viewportHeight*nextZoom);
 		if(camera.viewportWidth*nextZoom < 10 && camera.viewportHeight*nextZoom < 10)
 			return; //too much zoom in;
 		camera.zoom -= f;
@@ -137,8 +170,11 @@ public class MinesGame implements Screen {
 	}
 
 	public void zoomout(float f) {
-		Gdx.app.log("CameraOut", Float.toString(camera.viewportWidth*camera.zoom) + ":" + Float.toString(camera.viewportHeight*camera.zoom));
 		float nextZoom = camera.zoom + f;
+		Gdx.app.log("ZoomOut", camera.viewportWidth*camera.zoom + " : " +
+				camera.viewportWidth*nextZoom + " , " +
+				camera.viewportHeight*camera.zoom + " : " +
+				camera.viewportHeight*nextZoom);
 		if(camera.viewportWidth*nextZoom > width && camera.viewportHeight*nextZoom > height)
 			return; //too much zoom out;
 		camera.zoom += f;
@@ -153,13 +189,15 @@ public class MinesGame implements Screen {
 		float dy = 0;
 		float vw = camera.viewportWidth*camera.zoom;
 		float vh = camera.viewportHeight*camera.zoom;
+		float bw = width;
+		float bh = height;
 		Vector3 p = camera.position;
-		if(p.x+vw/2 > width/2)   dx = width/2 - vw/2 - p.x;
-		else if(p.x-vw/2 < -width/2)  dx = vw/2 - width/2 - p.x;
-		if(p.y+vh/2 > height/2)  dy = height/2 - vh/2 - p.y;
-		else if(p.y-vh/2 < -height/2) dy = vh/2 - height/2 - p.y;
-		if (vw >=  width) dx = 0 - p.x;
-		if (vh >= height) dy = 0 - p.y;
+		if(p.x+vw/2 > bw/2)   dx = bw/2 - vw/2 - p.x;
+		else if(p.x-vw/2 < -bw/2)  dx = vw/2 - bw/2 - p.x;
+		if(p.y+vh/2 > bh/2)  dy = bh/2 - vh/2 - p.y;
+		else if(p.y-vh/2 < -bh/2) dy = vh/2 - bh/2 - p.y;
+		if (vw >=  bw) dx = 0 - p.x;
+		if (vh >= bh) dy = 0 - p.y;
 		camera.translate(dx, dy, 0);
 		camera.update();
 	}
@@ -169,14 +207,16 @@ public class MinesGame implements Screen {
 		float dy = 0;
 		float vw = camera.viewportWidth*camera.zoom;
 		float vh = camera.viewportHeight*camera.zoom;
+		float bw = width;
+		float bh = height;
 		Vector3 p = camera.position;
 		//lock at bounds
-		if(f > 0) { if(p.x+f+vw/2 > width/2)   dx = width/2 - vw/2 - p.x;  else dx = f; }
-		if(f < 0) { if(p.x+f-vw/2 < -width/2)  dx = vw/2 - width/2 - p.x;  else dx = f; }
-		if(g > 0) { if(p.y+g+vh/2 > height/2)  dy = height/2 - vh/2 - p.y; else dy = g; }
-		if(g < 0) { if(p.y+g-vh/2 < -height/2) dy = vh/2 - height/2 - p.y; else dy = g; }
-		if (vw >=  width) dx = 0 - p.x;
-		if (vh >= height) dy = 0 - p.y;
+		if(f > 0) { if(p.x+f+vw/2 > bw/2)   dx = bw/2 - vw/2 - p.x; else dx = f; }
+		if(f < 0) { if(p.x+f-vw/2 < -bw/2)  dx = vw/2 - bw/2 - p.x; else dx = f; }
+		if(g > 0) { if(p.y+g+vh/2 > bh/2)   dy = bh/2 - vh/2 - p.y; else dy = g; }
+		if(g < 0) { if(p.y+g-vh/2 < -bh/2)  dy = vh/2 - bh/2 - p.y; else dy = g; }
+		if (vw >=  bw) dx = 0 - p.x;
+		if (vh >= bh) dy = 0 - p.y;
 		camera.translate(dx, dy, 0);
 		camera.update();
 	}
@@ -190,5 +230,20 @@ public class MinesGame implements Screen {
 		Gdx.app.log("CamRec", Float.toString(dx) + " " + Float.toString(dy));
 		if(Math.sqrt(dx*dx) > 0.25*vw || Math.sqrt(dy*dy) > 0.25*vh) moveCam(dx, dy);
 		
+	}
+
+	public void processTouch(float x, float y, int button) {
+		if(board.isFinished()) returnToMenu();
+		int w = board.getWidth();
+		int h = board.getHeight();
+		int i = (int) (x + w/2.0f);
+		int j = (int) (y + h/2.0f);
+		Gdx.app.log("pos", i + " " + j + " " +x + " " + y);
+		if(i >= 0 && i < w && j >=0 && j < h) {
+			if (button == 0) board.tileOpened(i, j);
+			else if(button == 1) {
+				board.tileFlagged(i, j);
+			}
+		}
 	}
 }

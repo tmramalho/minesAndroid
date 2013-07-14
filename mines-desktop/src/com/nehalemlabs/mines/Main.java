@@ -9,8 +9,8 @@ public class Main {
 		LwjglApplicationConfiguration cfg = new LwjglApplicationConfiguration();
 		cfg.title = "mines";
 		cfg.useGL20 = false;
-		cfg.width = 480;
-		cfg.height = 320;
+		cfg.width = 800;
+		cfg.height = 480;
 		TexturePacker2.process("../images", "../mines-android/assets", "tiles");
 		
 		new LwjglApplication(new MinesMain(), cfg);

@@ -5,11 +5,13 @@ import com.badlogic.gdx.Game;
 public class MinesMain extends Game {
 	private MainMenu mainMenu;
 	private MinesGame mainGame;
+	private CustomMenu customMenu;
 	
 	@Override
 	public void create() {
 		mainGame = new MinesGame(this);
 		mainMenu = new MainMenu(this);
+		customMenu = new CustomMenu(this);
 		setScreen(mainMenu);
 	}
 	
@@ -20,6 +22,10 @@ public class MinesMain extends Game {
 	
 	public void gotoMenu() {
 		setScreen(mainMenu);
+	}
+	
+	public void showCustom() {
+		setScreen(customMenu);
 	}
 
 	@Override

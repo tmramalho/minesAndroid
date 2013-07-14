@@ -65,15 +65,7 @@ public class MinesInputHandler implements InputProcessor {
 		Vector3 touchPos = new Vector3();
 		touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
 		camera.unproject(touchPos);
-		int w = board.getWidth();
-		int h = board.getHeight();
-		int i = (int) ((touchPos.x + w/2));
-		int j = (int) ((touchPos.y + h/2));
-		if(i >= 0 && i < w && j >=0 && j < h) {
-			if (button == 0) board.tileOpened(i, j);
-			else if(button == 1) board.tileFlagged(i, j);
-		}
-		//boss.recenterCamera(touchPos.x, touchPos.y);
+		boss.processTouch(touchPos.x, touchPos.y, button);
 		return false;
 	}
 

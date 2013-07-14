@@ -1,6 +1,7 @@
 package com.nehalemlabs.mines;
 
 import java.util.ArrayDeque;
+import java.util.Date;
 import java.util.Queue;
 
 import com.badlogic.gdx.Gdx;
@@ -13,9 +14,12 @@ public class MinesBoard {
 	private int height;
 	private int nb;
 	private int remaining;
-	private boolean boom = false;
-	private boolean clean = false;
-	private boolean ready = false;
+	private int flags;
+	private boolean boom;
+	private boolean clean;
+	private boolean ready;
+	private Date start;
+	private Pair<Integer, Integer> elapsed;
 	
 	public MinesBoard(int w, int h, int nBombs) {
 		createMineField(w,h,nBombs);
@@ -30,6 +34,10 @@ public class MinesBoard {
 		setHeight(h);
 		setNb(nBombs);
 		ready = false;
+		clean = false;
+		boom = false;
+		flags = 0;
+		elapsed = new Pair<Integer, Integer>(0, 0);
 	}
 	
 	private void putBombs(int ci, int cj) {
@@ -75,11 +83,25 @@ public class MinesBoard {
 		}
 		
 		remaining = width*height - nb;
+		start = new Date();
 		ready = true;
+	}
+	
+	public Pair<Integer, Integer> getElapsedTime() {
+		if(ready && !boom && !clean) {
+			Date current = new Date();
+			float diff = (current.getTime() - start.getTime()) / 1000.0f;
+			int minutes = (int) (diff / 60);
+			int seconds = (int) (diff % 60);
+			elapsed = new Pair<Integer, Integer>(minutes, seconds);
+		}
+		return elapsed;
 	}
 	
 	public int getTile(int i, int j) {
 		if(!ready) return 9;
+		if(boom && bombs[i][j] == 1) return 11; //show all bombs if defeat
+		if(clean && bombs[i][j] == 1) return 10; //flag all bombs if victory
 		if(state[i][j] == 0) return 9; //closed
 		if(state[i][j] == 1) return 10; //flagged
 		return counter[i][j]; //open
@@ -87,14 +109,28 @@ public class MinesBoard {
 	
 	public void tileFlagged(int i, int j) {
 		Gdx.app.log("Board", "Flagged" + i + ","+j);
-		if(state[i][j] == 0) state[i][j] = 1;
-		else if(state[i][j] == 1) state[i][j] = 0;
+		if(state[i][j] == 0) {
+			state[i][j] = 1;
+			flags += 1;
+		}
+		else if(state[i][j] == 1) {
+			state[i][j] = 0;
+			flags -= 1;
+		}
+	}
+	
+	public int getNumberHiddenBombs() {
+		return nb - flags;
 	}
 	
 	public void tileOpened(int i, int j) {
 		if(!ready) putBombs(i, j);
 		if(boom || clean) return;
-		if(state[i][j] > 0) return;
+		if(state[i][j] == 2) {
+			openSurrounding(i,j);
+			return;
+		}
+		else if (state[i][j] != 0) return;
 		Gdx.app.log("Board", "Opened" + i + ","+j);
 		if(bombs[i][j] == 1) {
 			this.boom = true;
@@ -134,6 +170,47 @@ public class MinesBoard {
 		}
 	}
 	
+	private void openSurrounding(int i, int j) {
+		if(counter[i][j] == 0) return;
+		//accumulate flags
+		int numFlags = 0;
+		if(i != (width-1) && j != (height-1) && state[i+1][j+1] == 1) 
+			numFlags += 1;
+		if(i != (width-1)                      && state[i+1][j  ] == 1) 
+			numFlags += 1;
+		if(i != (width-1) && j != 0          && state[i+1][j-1] == 1) 
+			numFlags += 1;
+		if(j != (height-1)                     && state[i  ][j+1] == 1) 
+			numFlags += 1;
+		if(j != 0                              && state[i  ][j-1] == 1) 
+			numFlags += 1;
+		if(i != 0 && j != (height-1)         && state[i-1][j+1] == 1) 
+			numFlags += 1;
+		if(i != 0                              && state[i-1][j  ] == 1) 
+			numFlags += 1;
+		if(i != 0 && j != 0                  && state[i-1][j-1] == 1) 
+			numFlags += 1;
+		if(numFlags == counter[i][j]) { //open closed tiles
+			if(i != (width-1) && j != (height-1) && state[i+1][j+1] == 0) 
+				tileOpened(i+1, j+1);
+			if(i != (width-1)                    && state[i+1][j  ] == 0) 
+				tileOpened(i+1, j  );
+			if(i != (width-1) && j != 0          && state[i+1][j-1] == 0) 
+				tileOpened(i+1, j-1);
+			if(j != (height-1)                   && state[i  ][j+1] == 0) 
+				tileOpened(i  , j+1);
+			if(j != 0                            && state[i  ][j-1] == 0) 
+				tileOpened(i  , j-1);
+			if(i != 0 && j != (height-1)         && state[i-1][j+1] == 0) 
+				tileOpened(i-1, j+1);
+			if(i != 0                            && state[i-1][j  ] == 0) 
+				tileOpened(i-1, j  );
+			if(i != 0 && j != 0                  && state[i-1][j-1] == 0) 
+				tileOpened(i-1, j-1);
+		}
+		
+	}
+
 	private void openSingleTile(int i, int j, Queue<Pair<Integer,Integer>> q) {
 		state[i][j] = 2;
 		remaining -= 1;
@@ -172,5 +249,9 @@ public class MinesBoard {
 
 	public void setNb(int nb) {
 		this.nb = nb;
+	}
+	
+	public boolean isFinished() {
+		return (boom || clean);
 	}
 }
