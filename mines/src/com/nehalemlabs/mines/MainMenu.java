@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Pixmap.Format;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
@@ -26,19 +27,19 @@ public class MainMenu implements Screen {
 	MinesMain parent;
 	private Stage stage;
 	private Skin skin;
-	private OrthographicCamera camera;
 
 	// constructor to keep a reference to the main Game class
-	public MainMenu(MinesMain g){
+	public MainMenu(MinesMain g, BitmapFont font){
 		float w = Gdx.graphics.getWidth();
 		float h = Gdx.graphics.getHeight();
-		this.camera = new OrthographicCamera(w, h);
-		this.camera.position.set(w/2, h/2, 0f);
 		this.parent = g;
 		stage = new Stage();
 		Gdx.input.setInputProcessor(stage);
-		skin = new Skin(Gdx.files.internal("data/uiskin.json"));
-
+		TextureAtlas atlas = new TextureAtlas(Gdx.files.internal("data/uiskin.atlas"));
+		skin = new Skin(atlas);
+		skin.add("lato-white", font);
+		skin.load(Gdx.files.internal("data/uiskin.json"));
+		
 		Table table = new Table();
 		table.setFillParent(true);
 		stage.addActor(table);
@@ -46,7 +47,7 @@ public class MainMenu implements Screen {
 		table.add(title);
 		table.row();
 		final TextButton button = new TextButton("Easy", skin);
-		table.add(button);
+		table.add(button).height(h/12).space(h/36);
 		button.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());
@@ -55,7 +56,7 @@ public class MainMenu implements Screen {
 		});
 		table.row();
 		final TextButton button1 = new TextButton("Medium", skin);
-		table.add(button1);
+		table.add(button1).height(h/12).space(h/36);
 		button1.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());
@@ -64,7 +65,7 @@ public class MainMenu implements Screen {
 		});
 		table.row();
 		final TextButton button2 = new TextButton("Hard", skin);
-		table.add(button2);
+		table.add(button2).height(h/12).space(h/36);
 		button2.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());
@@ -73,7 +74,7 @@ public class MainMenu implements Screen {
 		});
 		table.row();
 		final TextButton button3 = new TextButton("Professional", skin);
-		table.add(button3);
+		table.add(button3).height(h/12).space(h/36);
 		button3.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());
@@ -82,7 +83,7 @@ public class MainMenu implements Screen {
 		});
 		table.row();
 		final TextButton button4 = new TextButton("Custom", skin);
-		table.add(button4);
+		table.add(button4).height(h/12).space(h/36);
 		button4.addListener(new ChangeListener() {
 			public void changed (ChangeEvent event, Actor actor) {
 				System.out.println("Clicked! Is checked: " + button.isChecked());

@@ -109,6 +109,7 @@ public class MinesBoard {
 	
 	public void tileFlagged(int i, int j) {
 		Gdx.app.log("Board", "Flagged" + i + ","+j);
+		if(!ready || boom || clean) return;
 		if(state[i][j] == 0) {
 			state[i][j] = 1;
 			flags += 1;

@@ -11,58 +11,34 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 public class MinesGestures implements GestureListener {
-	private MinesBoard board;
+
 	private MinesGame boss;
 	private OrthographicCamera camera;
+	private Vector3 touchPos;
+	private boolean zooming = false;
 	
 	private final ScheduledExecutorService seService = Executors.newScheduledThreadPool(1);
 	private int lTap = 0;
 	
-	private Runnable tapper(float x, float y, int current) {
-		return new Runnable() {
-			int current = 0;
-			float x;
-			float y;
-			Runnable setCurrent(float _x, float _y, int _current) {
-				x = _x;
-				y = _y;
-				current = _current;
-				return this;
-			}
-			@Override
-			public void run() {
-				if(current == lTap) {
-					Gdx.app.log("GestureDetectorTest", "tap " + current + " activated");
-					Vector3 touchPos = new Vector3();
-					touchPos.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-					camera.unproject(touchPos);
-					boss.processTouch(touchPos.x, touchPos.y, current-1);
-				}
-				else {
-					
-				}
-			}
-		}.setCurrent(x, y, current);
-	}
-	
-	public MinesGestures(MinesGame g, OrthographicCamera c, MinesBoard b) {
+	public MinesGestures(MinesGame g, OrthographicCamera c) {
 		boss = g;
 		camera = c;
-		board = b;
+		touchPos = new Vector3();
 	}
 
 	@Override
 	public boolean touchDown(float x, float y, int pointer, int button) {
-		// TODO Auto-generated method stub
+		Gdx.app.log("touchdown", x + ":" + y + ":" + pointer + ":" + button);
+		zooming = false;
 		return false;
 	}
 
 	@Override
 	public boolean tap(float x, float y, int count, int button) {
-		//Gdx.app.log("GestureDetectorTest", "tap at " + x + ", " + y + ", count: " + count + ", btn:" + button);
-		
-		lTap = count;
-		seService.schedule(tapper(x, y, count), 300, TimeUnit.MILLISECONDS);
+		//open tile
+		touchPos.set(x, y, 0);
+		camera.unproject(touchPos);
+		boss.processTouch(touchPos.x, touchPos.y, 0);
 		
 		return false;
 	}
@@ -75,34 +51,83 @@ public class MinesGestures implements GestureListener {
 
 	@Override
 	public boolean fling(float velocityX, float velocityY, int button) {
-		// TODO Auto-generated method stub
+		Gdx.app.log("FLY!", velocityX + ":" + velocityY + ":" + button);
 		return false;
 	}
 
 	@Override
 	public boolean pan(float x, float y, float deltaX, float deltaY) {
 		Gdx.app.log("PAN", x + ":" + y + ":" + deltaX + ":" + deltaY);
-		boss.moveCam(-deltaX/100, deltaY/100);
+		/* unproject previous and current pos
+		 * to get unprojected delta
+		 */
+		touchPos.set(x, y, 0);
+		camera.unproject(touchPos); // current pos
+		float xn = touchPos.x;
+		float yn = touchPos.y;
+		touchPos.set(x - deltaX, y - deltaY, 0);
+		camera.unproject(touchPos); // previous pos
+		float dx = touchPos.x - xn;
+		float dy = touchPos.y - yn;
+		boss.moveCam(dx, dy);
 		return false;
 	}
 
 	@Override
 	public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2,
 			Vector2 pointer1, Vector2 pointer2) {
-		Gdx.app.log("Pinch", initialPointer1.x + ":" + initialPointer2.x + ":" + pointer1.x + ":" + pointer2.x);
+		zooming = true;
+		touchPos.set(initialPointer1.x, initialPointer1.y, 0);
+		camera.unproject(touchPos);
+		float x1n = touchPos.x;
+		float y1n = touchPos.y;
+		touchPos.set(initialPointer2.x, initialPointer2.y, 0);
+		camera.unproject(touchPos);
+		float x2n = touchPos.x;
+		float y2n = touchPos.y;
+		touchPos.set(pointer1.x, pointer1.y, 0);
+		camera.unproject(touchPos);
+		float x1p = touchPos.x;
+		float y1p = touchPos.y;
+		touchPos.set(pointer2.x, pointer2.y, 0);
+		camera.unproject(touchPos);
+		float x2p = touchPos.x;
+		float y2p = touchPos.y;
+		float dx1 = x1n - x2n;
+		float dy1 = y1n - y2n;
+		float dx2 = x1p - x2p;
+		float dy2 = y1p - y2p;
+		float initialDistance = (float) Math.sqrt(dx1*dx1+dy1*dy1);
+		float distance = (float) Math.sqrt(dx2*dx2+dy2*dy2);
+		Gdx.app.log("RatioUn", "->" + distance/initialDistance);
+		float cx = Math.abs((x1n + x2n)/2);
+		float cy = Math.abs((y1n + y2n)/2);
+		if(initialDistance < distance) {
+			float ratio = distance/initialDistance;
+			boss.zoomAndCenter(-ratio/100, cx, cy);
+		} else {
+			float ratio = initialDistance/distance;
+			boss.zoomAndCenter( ratio/100, cx, cy);
+		}
 		return false;
 	}
 
 	@Override
 	public boolean zoom(float initialDistance, float distance) {
-		Gdx.app.log("Zoom", initialDistance + ":" + distance);
+		zooming = true;
+		Gdx.app.log("RatioP", "->" + distance/initialDistance);
+		/*Gdx.app.log("Zoom", initialDistance + ":" + distance);
 		if(initialDistance < distance) {
 			float ratio = distance/initialDistance;
 			boss.zoomin(ratio);
 		} else {
 			float ratio = initialDistance/distance;
 			boss.zoomout(ratio);
-		}
+		}*/
 		return false;
 	}
+	
+	public boolean isZooming() {
+		return zooming;
 	}
+}

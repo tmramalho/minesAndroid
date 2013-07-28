@@ -8,5 +8,6 @@
 	<classpathentry exported="true" kind="lib" path="/mines/libs/gdx.jar" sourcepath="/mines/libs/gdx-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="libs/gdx-backend-android.jar" sourcepath="libs/gdx-backend-android-sources.jar"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES"/>
+	<classpathentry exported="true" kind="lib" path="/mines/libs/gdx-freetype.jar" sourcepath="/mines/libs/gdx-freetype-sources.jar"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

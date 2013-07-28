@@ -1,6 +1,9 @@
 package com.nehalemlabs.mines;
 
 import com.badlogic.gdx.Game;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 
 public class MinesMain extends Game {
 	private MainMenu mainMenu;
@@ -9,9 +12,13 @@ public class MinesMain extends Game {
 	
 	@Override
 	public void create() {
-		mainGame = new MinesGame(this);
-		mainMenu = new MainMenu(this);
-		customMenu = new CustomMenu(this);
+		//font = new BitmapFont(Gdx.files.internal("data/default.fnt"), Gdx.files.internal("data/default.png"), false);
+		FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal("Lato-Regular.ttf"));
+		BitmapFont font = gen.generateFont(16);
+		gen.dispose();
+		mainGame = new MinesGame(this, font);
+		mainMenu = new MainMenu(this, font);
+		customMenu = new CustomMenu(this, font);
 		setScreen(mainMenu);
 	}
 	

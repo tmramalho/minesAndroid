@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -32,16 +33,16 @@ public class MinesGame implements Screen {
 	private OrthographicCamera cameraMiniMap;
 	private SpriteBatch batchMiniMap;
 	
-	public MinesGame(MinesMain g) {
+	public MinesGame(MinesMain g, BitmapFont _font) {
 		this.parent = g;
 		float w = Gdx.graphics.getWidth();
 		float h = Gdx.graphics.getHeight();
 		
 		camera = new OrthographicCamera(1, h/w);
 		batch = new SpriteBatch();
-		font = new BitmapFont(Gdx.files.internal("data/default.fnt"), Gdx.files.internal("data/default.png"), false);
 		im = new InputMultiplexer();
 		board = new MinesBoard(10, 10, 10);
+		font = _font;
 		
 		cameraMiniMap = new OrthographicCamera(w, h);
 		batchMiniMap = new SpriteBatch();
@@ -51,9 +52,11 @@ public class MinesGame implements Screen {
 			im.addProcessor(ih);
 		}
 		else {
-			MinesGestures ig = new MinesGestures(this, camera, board);
+			MinesGestures ig = new MinesGestures(this, camera);
 			GestureDetector gd = new GestureDetector(20, 0.5f, 2, 0.15f, ig);
 			im.addProcessor(gd);
+			MinesTouchHandler th = new MinesTouchHandler(this, camera, ig);
+			im.addProcessor(th);
 		}
 		Gdx.input.setInputProcessor(im);
 		
@@ -122,8 +125,8 @@ public class MinesGame implements Screen {
 		batchMiniMap.setProjectionMatrix(cameraMiniMap.combined);
 		batchMiniMap.begin();
 		font.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-		font.draw(batchMiniMap, Integer.toString(elapsed.i) + ":" + Integer.toString(elapsed.j), -40, h/2);
-		font.draw(batchMiniMap, Integer.toString(nf), 0, h/2);
+		font.draw(batchMiniMap, Integer.toString(elapsed.i) + ":" + Integer.toString(elapsed.j), -40, h/2-h/100);
+		font.draw(batchMiniMap, Integer.toString(nf), 0, h/2-h/100);
 		batchMiniMap.end();
 	}
 
@@ -154,6 +157,25 @@ public class MinesGame implements Screen {
 	public void returnToMenu() {
 		parent.gotoMenu();
 		
+	}
+	
+	public void zoomAndCenter(float f, float x, float y) {
+		//f can be positive or negative
+		float nextZoom = camera.zoom * f * f;
+		//Gdx.app.log("ZoomCenter", camera.viewportWidth*camera.zoom + " : " +
+		//		camera.viewportWidth*nextZoom + " , " +
+		//		camera.viewportHeight*camera.zoom + " : " +
+		//		camera.viewportHeight*nextZoom);
+		if(camera.viewportWidth*nextZoom < 10 && camera.viewportHeight*nextZoom < 10)
+			return; //too much zoom in;
+		if(camera.viewportWidth*nextZoom > width && camera.viewportHeight*nextZoom > height)
+			return; //too much zoom out;
+		camera.zoom *= f * f;
+		camera.update();
+		Vector3 p = camera.position;
+		//Gdx.app.log("Recenter", p.x + ":" + x + ":" + p.y + ":" + y);
+		//moveCam(x - p.x, y - p.y);
+		lockCam();
 	}
 
 	public void zoomin(float f) {
